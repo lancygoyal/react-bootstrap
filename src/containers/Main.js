@@ -7,11 +7,45 @@ import Data from '../constants/data';
 const getSuggestions = value => {
   const inputValue = value.trim().toLowerCase();
   const inputLength = inputValue.length;
-  const regex = new RegExp('[' + value + ']', 'i');
-  console.log(regex)
-  return inputLength === 0 ? [] : Data.filter(obj =>
-    regex.test(obj.name)
-  );
+  // const regex = new RegExp(inputValue, "i");
+
+  return inputLength === 0 ? [] : Data.filter(obj => {
+    return levenshtein(inputValue, obj.name) < 3;
+  });
+};
+
+// Levenshtein distance between two given strings
+const levenshtein = (a, b) => {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+
+  var matrix = [];
+
+  // increment along the first column of each row
+  var i;
+  for (i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+
+  // increment each column in the first row
+  var j;
+  for (j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  // Fill in the rest of the matrix
+  for (i = 1; i <= b.length; i++) {
+    for (j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, // substitution
+          Math.min(matrix[i][j - 1] + 1, // insertion
+            matrix[i - 1][j] + 1)); // deletion
+      }
+    }
+  }
+  return matrix[b.length][a.length];
 };
 
 export default class Main extends React.Component {
